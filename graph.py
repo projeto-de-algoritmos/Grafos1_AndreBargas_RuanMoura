@@ -21,7 +21,6 @@ def new_graph():
             names.pop()
         else:
             break
-    print(names)
     for name in names:
         graph[name] = randomNames(name, names)
     file_pointer.close()
@@ -41,11 +40,48 @@ def reverse_graph(graph):
                 graphR[nome] = [key]
                 graphRcount[nome] = 1
     return graphR, graphRcount
-
-
-def most_popular(graphRcount):
-    """ Retorna uma lista decrescente de acordo com o grau, cada indice é uma tupla contendo o vertice e seu grau """
-    lista = list(graphRcount.items())
-    lista.sort(reverse=True, key = lambda x: x[1])
-    return lista
     
+
+def first_suggestion(follow):
+    """ retorna um dicionario com nome de pessoa seguida pelo follow como chave e 1 como valor """
+    dicio = {x: 1 for x in graph[follow]}
+    return dicio
+
+
+def suggestion_update(name, follow):
+    global suggestions
+    
+    suggestions.pop(follow, None)
+
+    for i in graph[follow]:
+        if i in graph[name]:
+            continue
+        elif i in suggestions:
+            suggestions[i] = suggestions[i] + 1
+        else:
+            suggestions[i] = 1
+
+
+def insert_edge(name, follow):
+    """ Insere uma nova aresta no grafo, atualizando tambem o graphR e o graphRcount """
+    global suggestions
+    if graph.get(name):
+        graph[name] = graph[name] + [follow]
+        suggestion_update(name, follow)
+    else:
+        graph[name] = [follow]
+        suggestions = first_suggestion(follow)
+
+    if graphR.get(follow):
+        graphR[follow] = graphR[follow] + [name]
+        graphRcount[follow] = graphRcount[follow] + 1
+    else:
+        graphR[follow] = [name]
+        graphRcount[follow] = 1
+
+    return suggestions
+
+
+graph = new_graph()
+graphR, graphRcount = reverse_graph(graph)
+suggestions = graphRcount.copy()
