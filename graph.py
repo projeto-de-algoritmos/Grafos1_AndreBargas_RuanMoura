@@ -8,8 +8,7 @@ class Graph:
 
     def randomNames(self, name, names):
         """ Retorna uma lista de 2 a 100 pessoas em names, excluindo name """
-        k = randint(2, 100)
-        # k = randint(2, 10)
+        k = randint(11, 500)
         followed_peoples = sample(names, k = k)
         if name in followed_peoples:
             followed_peoples.remove(name)
@@ -19,7 +18,6 @@ class Graph:
         """ Gera um grafo de 10000 vertices """
         graph = {}
         file_pointer = open('names.txt')
-        # file_pointer = open('names_test.txt')
         names = file_pointer.read().split('\n')
         while True:
             if not names[-1]:
