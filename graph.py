@@ -1,87 +1,73 @@
 from random import sample, randint
 
-def randomNames(name, names):
-    """ Retorna uma lista de 2 a 100 pessoas em names, excluindo name """
-    k = randint(2, 100)
-    # k = randint(2, 10)
-    followed_peoples = sample(names, k = k)
-    if name in followed_peoples:
-        followed_peoples.remove(name)
-    return followed_peoples
+class Graph:
 
+    def __init__(self):
+        self.graph = self.new_graph()
+        self.suggestion = self.reverse_graph()
 
-def new_graph():
-    """ Gera um grafo de 10000 vertices """
-    graph = {}
-    file_pointer = open('names.txt')
-    # file_pointer = open('names_test.txt')
-    names = file_pointer.read().split('\n')
-    while True:
-        if not names[-1]:
-            names.pop()
-        else:
-            break
-    for name in names:
-        graph[name] = randomNames(name, names)
-    file_pointer.close()
-    return graph
+    def randomNames(self, name, names):
+        """ Retorna uma lista de 2 a 100 pessoas em names, excluindo name """
+        k = randint(2, 100)
+        # k = randint(2, 10)
+        followed_peoples = sample(names, k = k)
+        if name in followed_peoples:
+            followed_peoples.remove(name)
+        return followed_peoples
 
-
-def reverse_graph(graph):
-    """ Retorna 2 dicionarios, um sendo o grafo reverso e o outro sendo o grau de cada vertice no grafo reverso """
-    graphR = {}
-    graphRcount = {}
-    for key, value in graph.items():
-        for nome in value:
-            if graphR.get(nome):
-                graphR[nome] = graphR[nome] + [key]
-                graphRcount[nome] = graphRcount[nome] + 1
+    def new_graph(self):
+        """ Gera um grafo de 10000 vertices """
+        graph = {}
+        file_pointer = open('names.txt')
+        # file_pointer = open('names_test.txt')
+        names = file_pointer.read().split('\n')
+        while True:
+            if not names[-1]:
+                names.pop()
             else:
-                graphR[nome] = [key]
-                graphRcount[nome] = 1
-    return graphR, graphRcount
-    
+                break
+        for name in names:
+            graph[name] = self.randomNames(name, names)
+        file_pointer.close()
+        return graph
 
-def first_suggestion(follow):
-    """ retorna um dicionario com nome de pessoa seguida pelo follow como chave e 1 como valor """
-    dicio = {x: 1 for x in graph[follow]}
-    return dicio
+    def reverse_graph(self):
+        """ Retorna um dicionario com o valor de cada grau no grafo reverso """
+        graphRcount = {}
+        for value in self.graph.values():
+            for name in value:
+                if graphRcount.get(name):
+                    graphRcount[name] = graphRcount[name] + 1
+                else:
+                    graphRcount[name] = 1
+        return graphRcount
 
+    def first_suggestion(self, follow):
+        """ atribui um dicionario com nome da pessoa seguida pelo follow como chave e 1 como valor para self.suggestion"""
+        self.suggestion = {x: 1 for x in self.graph[follow]}
 
-def suggestion_update(name, follow):
-    global suggestions
-    
-    suggestions.pop(follow, None)
+    def suggestion_update(self, name, follow):
+        """ atualiza a lista de sugestão dado que name começou a seguir follow """
+        self.suggestion.pop(follow, None)
 
-    for i in graph[follow]:
-        if i in graph[name]:
-            continue
-        elif i in suggestions:
-            suggestions[i] = suggestions[i] + 1
+        for i in self.graph[follow]:
+            #se o vizinho do follow já é meu vizinho
+            if i in self.graph[name]:
+                continue
+            #senão se o vizinho do follow já esta nas minhas sugestões
+            elif i in self.suggestion:
+                self.suggestion[i] = self.suggestion[i] + 1
+            #senão 
+            else:
+                self.suggestion[i] = 1
+
+    def insert_edge(self, name, follow):
+        """ Insere uma nova aresta no grafo atualizando as sugestões """
+        #caso name já esteja conectado com o grafo
+        if self.graph.get(name):
+            self.graph[name] = self.graph[name] + [follow]
+            self.suggestion_update(name, follow)
         else:
-            suggestions[i] = 1
-
-
-def insert_edge(name, follow):
-    """ Insere uma nova aresta no grafo, atualizando tambem o graphR e o graphRcount """
-    global suggestions
-    if graph.get(name):
-        graph[name] = graph[name] + [follow]
-        suggestion_update(name, follow)
-    else:
-        graph[name] = [follow]
-        suggestions = first_suggestion(follow)
-
-    if graphR.get(follow):
-        graphR[follow] = graphR[follow] + [name]
-        graphRcount[follow] = graphRcount[follow] + 1
-    else:
-        graphR[follow] = [name]
-        graphRcount[follow] = 1
-
-    return suggestions
-
-
-graph = new_graph()
-graphR, graphRcount = reverse_graph(graph)
-suggestions = graphRcount.copy()
+            self.graph[name] = [follow]
+            self.first_suggestion(follow)
+            
